@@ -1,0 +1,48 @@
+{
+  "name": "@avva/newsletter",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for the AVVA Newsletter API (/api/v1) — subscribers, lists, campaigns and transactional messages.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "avva",
+    "newsletter",
+    "email",
+    "transactional",
+    "subscribers",
+    "campaigns",
+    "api",
+    "sdk",
+    "typescript"
+  ],
+  "author": "AVVA",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}
