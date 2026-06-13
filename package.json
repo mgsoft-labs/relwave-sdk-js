@@ -1,7 +1,7 @@
 {
-  "name": "@avva/newsletter",
+  "name": "@mgsoft/flow",
   "version": "1.0.0",
-  "description": "Official TypeScript SDK for the AVVA Newsletter API (/api/v1) — subscribers, lists, campaigns and transactional messages.",
+  "description": "Official TypeScript SDK for the MGSoft Flow API (/api/v1) — subscribers, lists, campaigns and transactional messages.",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -27,8 +27,8 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "avva",
-    "newsletter",
+    "mgsoft",
+    "flow",
     "email",
     "transactional",
     "subscribers",
@@ -37,7 +37,7 @@
     "sdk",
     "typescript"
   ],
-  "author": "AVVA",
+  "author": "MGSoft",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

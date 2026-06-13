@@ -1,4 +1,4 @@
-import { NewsletterError } from './errors.js';
+import { FlowError } from './errors.js';
 import type {
   ApiEnvelope,
   Campaign,
@@ -14,7 +14,7 @@ import type {
   Subscriber,
 } from './types.js';
 
-export { NewsletterError } from './errors.js';
+export { FlowError } from './errors.js';
 export type * from './types.js';
 
 /** Minimal `fetch` signature so the SDK works in Node 18+, Deno and browsers. */
@@ -23,8 +23,8 @@ export type FetchLike = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-/** Configuration for {@link NewsletterClient}. */
-export interface NewsletterClientConfig {
+/** Configuration for {@link FlowClient}. */
+export interface FlowClientConfig {
   /**
    * API key in `nl_xxxxx.secret` form. Keys prefixed with `nl_test_` are
    * sandbox keys — transactional sends are mocked, no real email is delivered.
@@ -32,7 +32,7 @@ export interface NewsletterClientConfig {
   apiKey: string;
   /**
    * Base URL of the API, without a trailing `/api/v1`. Defaults to
-   * `https://api.avva.com.tr`. The `/api/v1` segment is appended automatically.
+   * `https://api.mgsoft.com.tr`. The `/api/v1` segment is appended automatically.
    */
   baseUrl?: string;
   /** Send the key as `X-Api-Key` instead of `Authorization: Bearer`. Default: bearer. */
@@ -45,7 +45,7 @@ export interface NewsletterClientConfig {
   fetch?: FetchLike;
 }
 
-const DEFAULT_BASE_URL = 'https://api.avva.com.tr';
+const DEFAULT_BASE_URL = 'https://api.mgsoft.com.tr';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 interface RequestSpec {
@@ -58,13 +58,13 @@ interface RequestSpec {
 }
 
 /**
- * Typed client for the AVVA Newsletter API.
+ * Typed client for the MGSoft Flow API.
  *
  * @example
  * ```ts
- * import { NewsletterClient } from '@avva/newsletter';
+ * import { FlowClient } from '@mgsoft/flow';
  *
- * const client = new NewsletterClient({ apiKey: process.env.NEWSLETTER_API_KEY! });
+ * const client = new FlowClient({ apiKey: process.env.NEWSLETTER_API_KEY! });
  *
  * const message = await client.messages.send({
  *   to: 'jane@example.com',
@@ -75,7 +75,7 @@ interface RequestSpec {
  * console.log(message.id, message.status);
  * ```
  */
-export class NewsletterClient {
+export class FlowClient {
   readonly subscribers: SubscribersResource;
   readonly lists: ListsResource;
   readonly campaigns: CampaignsResource;
@@ -88,15 +88,16 @@ export class NewsletterClient {
   private readonly timeoutMs: number;
   private readonly fetchImpl: FetchLike;
 
-  constructor(config: NewsletterClientConfig) {
+  constructor(config: FlowClientConfig) {
     if (!config.apiKey) {
-      throw new Error('NewsletterClient: `apiKey` is required.');
+      throw new Error('FlowClient: `apiKey` is required.');
     }
 
     const fetchImpl = config.fetch ?? globalThis.fetch;
+
     if (typeof fetchImpl !== 'function') {
       throw new Error(
-        'NewsletterClient: no global `fetch` available. Use Node 18+ or pass a `fetch` implementation.',
+        'FlowClient: no global `fetch` available. Use Node 18+ or pass a `fetch` implementation.',
       );
     }
 
@@ -119,7 +120,7 @@ export class NewsletterClient {
   }
 
   /**
-   * Issue a request and return the parsed envelope. Throws {@link NewsletterError}
+   * Issue a request and return the parsed envelope. Throws {@link FlowError}
    * on HTTP >= 400 or a populated `errors` map. Internal — resources call this.
    *
    * @internal
@@ -130,6 +131,7 @@ export class NewsletterClient {
     const { signal, clear } = this.buildSignal(spec.signal);
 
     let response: Response;
+
     try {
       response = await this.fetchImpl(url, {
         method: spec.method,
@@ -139,13 +141,15 @@ export class NewsletterClient {
       });
     } catch (cause) {
       clear();
+
       if (cause instanceof Error && cause.name === 'AbortError') {
-        throw new NewsletterError('Request aborted or timed out.', {
+        throw new FlowError('Request aborted or timed out.', {
           status: 0,
           body: cause,
         });
       }
-      throw new NewsletterError(
+
+      throw new FlowError(
         `Network error: ${cause instanceof Error ? cause.message : String(cause)}`,
         { status: 0, body: cause },
       );
@@ -166,12 +170,13 @@ export class NewsletterClient {
       } catch {
         // Non-JSON body (e.g. a proxy error page) — surface it raw.
         if (!response.ok) {
-          throw new NewsletterError(
+          throw new FlowError(
             `Unexpected non-JSON response (HTTP ${response.status}).`,
             { status: response.status, body: text },
           );
         }
-        throw new NewsletterError('Failed to parse response body as JSON.', {
+
+        throw new FlowError('Failed to parse response body as JSON.', {
           status: response.status,
           body: text,
         });
@@ -183,7 +188,7 @@ export class NewsletterClient {
     const hasErrors = Object.keys(errors).length > 0;
 
     if (!response.ok || hasErrors) {
-      throw new NewsletterError(this.buildErrorMessage(response.status, errors), {
+      throw new FlowError(this.buildErrorMessage(response.status, errors), {
         status: response.status,
         errors,
         retryAfter: this.resolveRetryAfter(response, envelope.meta),
@@ -201,10 +206,12 @@ export class NewsletterClient {
 
   private buildErrorMessage(status: number, errors: ErrorMap): string {
     const first = Object.values(errors)[0]?.[0];
+
     if (first) {
       return first;
     }
-    return `Newsletter API request failed with status ${status}.`;
+
+    return `MGSoft Flow API request failed with status ${status}.`;
   }
 
   private resolveRetryAfter(
@@ -216,14 +223,17 @@ export class NewsletterClient {
     }
 
     const header = response.headers.get('Retry-After');
+
     if (header) {
       const parsed = Number.parseInt(header, 10);
+
       if (Number.isFinite(parsed)) {
         return parsed;
       }
     }
 
     const metaValue = meta?.['retry_after_seconds'];
+
     if (typeof metaValue === 'number' && Number.isFinite(metaValue)) {
       return metaValue;
     }
@@ -236,12 +246,15 @@ export class NewsletterClient {
 
     if (query) {
       const search = new URLSearchParams();
+
       for (const [key, value] of Object.entries(query)) {
         if (value !== undefined && value !== null) {
           search.append(key, String(value));
         }
       }
+
       const qs = search.toString();
+
       if (qs.length > 0) {
         url += `?${qs}`;
       }
@@ -301,6 +314,7 @@ function normalizeErrors(raw: unknown): ErrorMap {
   }
 
   const out: ErrorMap = {};
+
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     if (Array.isArray(value)) {
       out[key] = value.map((v) => String(v));
@@ -323,7 +337,7 @@ function toPaginationMeta(meta: Record<string, unknown>): PaginationMeta {
 
 /** Subscriber operations: `client.subscribers.*`. */
 export class SubscribersResource {
-  constructor(private readonly client: NewsletterClient) {}
+  constructor(private readonly client: FlowClient) {}
 
   /** List subscribers (paginated). `GET /subscribers`. */
   async list(params: ListSubscribersParams = {}): Promise<Paginated<Subscriber>> {
@@ -378,7 +392,7 @@ export class SubscribersResource {
 
 /** Mailing list operations: `client.lists.*`. */
 export class ListsResource {
-  constructor(private readonly client: NewsletterClient) {}
+  constructor(private readonly client: FlowClient) {}
 
   /** List all mailing lists. `GET /lists`. */
   async list(options: RequestOptions = {}): Promise<MailingList[]> {
@@ -394,7 +408,7 @@ export class ListsResource {
 
 /** Campaign operations: `client.campaigns.*`. */
 export class CampaignsResource {
-  constructor(private readonly client: NewsletterClient) {}
+  constructor(private readonly client: FlowClient) {}
 
   /** List all campaigns. `GET /campaigns`. */
   async list(options: RequestOptions = {}): Promise<Campaign[]> {
@@ -410,12 +424,12 @@ export class CampaignsResource {
 
 /** Transactional message operations: `client.messages.*`. */
 export class MessagesResource {
-  constructor(private readonly client: NewsletterClient) {}
+  constructor(private readonly client: FlowClient) {}
 
   /** Send a transactional message. `POST /messages` (201). At least one of `html`/`text` required. */
   async send(body: SendMessageInput, options: RequestOptions = {}): Promise<Message> {
     if (!body.html && !body.text) {
-      throw new NewsletterError('messages.send requires at least one of `html` or `text`.', {
+      throw new FlowError('messages.send requires at least one of `html` or `text`.', {
         status: 422,
         errors: { html: ['html or text is required'] },
       });

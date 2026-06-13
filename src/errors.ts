@@ -10,7 +10,7 @@ import type { ErrorMap } from './types.js';
  * try {
  *   await client.messages.send({ to: 'x@example.com', subject: 'Hi', text: 'yo' });
  * } catch (err) {
- *   if (err instanceof NewsletterError) {
+ *   if (err instanceof FlowError) {
  *     console.error(err.status, err.errors);
  *     if (err.isRateLimited) {
  *       await sleep((err.retryAfter ?? 1) * 1000);
@@ -19,7 +19,7 @@ import type { ErrorMap } from './types.js';
  * }
  * ```
  */
-export class NewsletterError extends Error {
+export class FlowError extends Error {
   /** HTTP status code (e.g. 401, 403, 404, 422, 429). */
   readonly status: number;
 
@@ -46,7 +46,7 @@ export class NewsletterError extends Error {
     },
   ) {
     super(message);
-    this.name = 'NewsletterError';
+    this.name = 'FlowError';
     this.status = options.status;
     this.errors = options.errors ?? {};
     this.retryAfter = options.retryAfter;
@@ -54,7 +54,7 @@ export class NewsletterError extends Error {
     this.body = options.body;
 
     // Restore prototype chain for `instanceof` across transpilation targets.
-    Object.setPrototypeOf(this, NewsletterError.prototype);
+    Object.setPrototypeOf(this, FlowError.prototype);
   }
 
   /** True for 401 (missing/invalid API key). */

@@ -1,5 +1,5 @@
 /**
- * Dependency-free smoke example for @avva/newsletter.
+ * Dependency-free smoke example for @mgsoft/flow.
  *
  * No test runner (vitest is not installed). It uses a mocked `fetch` to
  * exercise the envelope unwrapping, idempotency header, and typed errors,
@@ -8,7 +8,7 @@
  * Run after building:  npm run build && node test/example.mjs
  */
 import assert from 'node:assert/strict';
-import { NewsletterClient, NewsletterError } from '../dist/index.js';
+import { FlowClient, FlowError } from '../dist/index.js';
 
 /** Build a JSON Response shaped like the /api/v1 envelope. */
 function envelope(body, { status = 200, headers = {} } = {}) {
@@ -21,11 +21,12 @@ function envelope(body, { status = 200, headers = {} } = {}) {
 // 1. messages.send unwraps `data` and forwards the idempotency header.
 {
   const calls = [];
-  const client = new NewsletterClient({
+  const client = new FlowClient({
     apiKey: 'nl_test_abcde.secret',
     baseUrl: 'https://app.test',
     fetch: async (url, init) => {
       calls.push({ url, init });
+
       return envelope({
         data: { id: 1, message_id: 'abc@app.test', to: 'jane@example.com', status: 'sent', sandbox: true },
         meta: { sandbox: true },
@@ -50,7 +51,7 @@ function envelope(body, { status = 200, headers = {} } = {}) {
 
 // 2. subscribers.list exposes pagination meta.
 {
-  const client = new NewsletterClient({
+  const client = new FlowClient({
     apiKey: 'nl_live.secret',
     fetch: async () =>
       envelope({
@@ -66,9 +67,9 @@ function envelope(body, { status = 200, headers = {} } = {}) {
   assert.equal(page.meta.last_page, 5);
 }
 
-// 3. A 422 envelope throws a typed NewsletterError.
+// 3. A 422 envelope throws a typed FlowError.
 {
-  const client = new NewsletterClient({
+  const client = new FlowClient({
     apiKey: 'nl_live.secret',
     fetch: async () =>
       envelope({ data: null, meta: {}, errors: { to: ['recipient is on the suppression list'] } }, { status: 422 }),
@@ -77,10 +78,11 @@ function envelope(body, { status = 200, headers = {} } = {}) {
   await assert.rejects(
     () => client.messages.send({ to: 'x@y.com', subject: 'Hi', text: 'yo' }),
     (err) => {
-      assert.ok(err instanceof NewsletterError);
+      assert.ok(err instanceof FlowError);
       assert.equal(err.status, 422);
       assert.equal(err.isValidationError, true);
       assert.deepEqual(err.errors.to, ['recipient is on the suppression list']);
+
       return true;
     },
   );
@@ -88,7 +90,7 @@ function envelope(body, { status = 200, headers = {} } = {}) {
 
 // 4. A 429 surfaces retryAfter from the Retry-After header.
 {
-  const client = new NewsletterClient({
+  const client = new FlowClient({
     apiKey: 'nl_live.secret',
     fetch: async () =>
       envelope(
@@ -100,12 +102,13 @@ function envelope(body, { status = 200, headers = {} } = {}) {
   await assert.rejects(
     () => client.subscribers.list(),
     (err) => {
-      assert.ok(err instanceof NewsletterError);
+      assert.ok(err instanceof FlowError);
       assert.equal(err.isRateLimited, true);
       assert.equal(err.retryAfter, 30);
+
       return true;
     },
   );
 }
 
-console.log('All @avva/newsletter smoke checks passed.');
+console.log('All @mgsoft/flow smoke checks passed.');
