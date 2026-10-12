@@ -109,6 +109,25 @@ const detail = await client.messages.get(message.id);
 console.log(detail.status, detail.events);
 ```
 
+### Attachments and templates
+
+```ts
+import { readFile } from 'node:fs/promises';
+
+await client.messages.send({
+  to: 'jane@example.com',
+  subject: 'Your invoice',
+  template_id: 12, // the body fills the template's {{content}} slot
+  markdown: 'Thanks for your order, **{{ first_name }}**.',
+  variables: { first_name: 'Jane' },
+  attachments: [
+    { filename: 'invoice.pdf', content: (await readFile('invoice.pdf')).toString('base64') },
+  ],
+});
+```
+
+Up to 10 files, 10 MB in total. Executable and script types are rejected.
+
 ## Error handling
 
 Any non-2xx response, or a response with a populated `errors` map, throws a

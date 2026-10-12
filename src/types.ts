@@ -140,7 +140,7 @@ export interface CreateSubscriberInput {
   attributes?: JsonObject;
 }
 
-/** Request body for `messages.send`. At least one of `html` / `text` is required. */
+/** Request body for `messages.send`. At least one of `html` / `text` / `markdown` / `template_id` is required. */
 export interface SendMessageInput {
   to: string;
   subject: string;
@@ -154,6 +154,21 @@ export interface SendMessageInput {
   metadata?: JsonObject;
   /** Up to 10 tags. */
   tags?: string[];
+  /** Markdown body, converted to HTML server-side. Used when `html` is absent. */
+  markdown?: string;
+  /** Template id; the body (if any) fills the template's `{{content}}` slot. */
+  template_id?: number;
+  /** Up to 10 files, 10 MB in total (decoded). */
+  attachments?: MessageAttachment[];
+}
+
+/** A file attached to a transactional message. */
+export interface MessageAttachment {
+  filename: string;
+  /** File contents, base64-encoded. */
+  content: string;
+  /** MIME type; guessed from the extension when omitted. */
+  content_type?: string;
 }
 
 /** Per-call configuration shared by request helpers. */
