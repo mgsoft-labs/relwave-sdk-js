@@ -1,7 +1,7 @@
 {
-  "name": "@mgsoft/flow",
+  "name": "@relwave/sdk",
   "version": "1.0.0",
-  "description": "Official TypeScript SDK for the MGSoft Flow API (/api/v1) — subscribers, lists, campaigns and transactional messages.",
+  "description": "Official TypeScript SDK for the Relwave API (/api/v1) — subscribers, lists, campaigns and transactional messages.",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -28,7 +28,7 @@
   },
   "keywords": [
     "mgsoft",
-    "flow",
+    "relwave",
     "email",
     "transactional",
     "subscribers",

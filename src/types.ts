@@ -1,5 +1,5 @@
 /**
- * Shared type definitions for the MGSoft Flow API (/api/v1).
+ * Shared type definitions for the Relwave API (/api/v1).
  *
  * These mirror the server-side response envelope and transformers exactly.
  * Every endpoint wraps its payload in {@link ApiEnvelope}:
@@ -7,7 +7,7 @@
  *   { "data": ..., "meta": {...}, "errors": {...} }
  *
  * On success `errors` is empty; on failure (HTTP >= 400) `errors` is a
- * map of `field -> string[]` and the SDK throws a {@link FlowError}.
+ * map of `field -> string[]` and the SDK throws a {@link RelwaveError}.
  */
 
 /** Lifecycle status of a subscriber. */

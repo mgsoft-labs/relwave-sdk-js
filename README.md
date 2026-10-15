@@ -1,6 +1,6 @@
-# @mgsoft/flow
+# @relwave/sdk
 
-Official TypeScript SDK for the **MGSoft Flow API** (`/api/v1`).
+Official TypeScript SDK for the **Relwave API** (`/api/v1`).
 
 Manage subscribers, mailing lists and campaigns, and send transactional email — fully typed, ESM, `fetch`-based. Works in **Node 18+** (global `fetch`), Deno, and modern browsers.
 
@@ -9,17 +9,17 @@ Manage subscribers, mailing lists and campaigns, and send transactional email �
 > **Yakında.** Paket henüz npm'e yayınlanmadı; aşağıdaki komut yayın sonrası geçerli olacak.
 
 ```bash
-npm install @mgsoft/flow
+npm install @relwave/sdk
 ```
 
 ## Quickstart
 
 ```ts
-import { FlowClient } from '@mgsoft/flow';
+import { RelwaveClient } from '@relwave/sdk';
 
-const client = new FlowClient({
+const client = new RelwaveClient({
   apiKey: process.env.NEWSLETTER_API_KEY!, // "nl_xxxxx.secret"
-  baseUrl: 'https://app.mgsoft.com.tr',     // optional — "/api/v1" is appended automatically
+  baseUrl: 'https://app.relwave.com',     // optional — "/api/v1" is appended automatically
 });
 
 // Send a transactional message
@@ -46,7 +46,7 @@ Authorization: Bearer nl_xxxxx.secret
 To use the alternative header instead, set `useApiKeyHeader: true`:
 
 ```ts
-const client = new FlowClient({
+const client = new RelwaveClient({
   apiKey: 'nl_xxxxx.secret',
   useApiKeyHeader: true, // sends `X-Api-Key: nl_xxxxx.secret`
 });
@@ -55,7 +55,7 @@ const client = new FlowClient({
 ## API
 
 The client exposes four resources. All methods return parsed, typed data
-(the response `data` payload) and throw a `FlowError` on failure.
+(the response `data` payload) and throw a `RelwaveError` on failure.
 
 ### Subscribers
 
@@ -131,16 +131,16 @@ Up to 10 files, 10 MB in total. Executable and script types are rejected.
 ## Error handling
 
 Any non-2xx response, or a response with a populated `errors` map, throws a
-typed `FlowError`. It carries the HTTP `status`, the structured `errors`
+typed `RelwaveError`. It carries the HTTP `status`, the structured `errors`
 map (`field -> string[]`), and — for rate limits — `retryAfter` in seconds.
 
 ```ts
-import { FlowClient, FlowError } from '@mgsoft/flow';
+import { RelwaveClient, RelwaveError } from '@relwave/sdk';
 
 try {
   await client.messages.send({ to: 'bad', subject: 'Hi', text: 'yo' });
 } catch (err) {
-  if (err instanceof FlowError) {
+  if (err instanceof RelwaveError) {
     console.error('HTTP', err.status);
     console.error(err.toReadableString()); // "to: invalid email address"
 
@@ -195,7 +195,7 @@ are mocked — the API returns a realistic `sent` response (`sandbox: true`) but
 no real email is delivered. Useful for integration tests.
 
 ```ts
-const client = new FlowClient({ apiKey: 'nl_test_abcde.secret' });
+const client = new RelwaveClient({ apiKey: 'nl_test_abcde.secret' });
 
 console.log(client.isSandbox); // true
 
@@ -213,7 +213,7 @@ console.log(result.sandbox); // true
 | Option            | Type      | Default                     | Description                                          |
 | ----------------- | --------- | --------------------------- | ---------------------------------------------------- |
 | `apiKey`          | `string`  | — (required)                | API key, `nl_xxxxx.secret`.                          |
-| `baseUrl`         | `string`  | `https://api.mgsoft.com.tr` | App origin; `/api/v1` is appended automatically.     |
+| `baseUrl`         | `string`  | `https://api.relwave.com` | App origin; `/api/v1` is appended automatically.     |
 | `useApiKeyHeader` | `boolean` | `false`                     | Send `X-Api-Key` instead of `Authorization: Bearer`. |
 | `headers`         | `object`  | `{}`                        | Extra headers merged into every request.             |
 | `timeoutMs`       | `number`  | `30000`                     | Per-request timeout (`0` disables).                  |
@@ -223,7 +223,7 @@ console.log(result.sandbox); // true
 
 Every endpoint responds with `{ data, meta, errors }`. The SDK unwraps it for
 you: success returns `data` (and `meta` for paginated lists), while a populated
-`errors` map or HTTP ≥ 400 throws `FlowError`.
+`errors` map or HTTP ≥ 400 throws `RelwaveError`.
 
 ## Types
 

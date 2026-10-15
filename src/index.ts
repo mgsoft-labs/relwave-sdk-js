@@ -1,4 +1,4 @@
-import { FlowError } from './errors.js';
+import { RelwaveError } from './errors.js';
 import type {
   ApiEnvelope,
   Campaign,
@@ -14,7 +14,7 @@ import type {
   Subscriber,
 } from './types.js';
 
-export { FlowError } from './errors.js';
+export { RelwaveError } from './errors.js';
 export type * from './types.js';
 
 /** Minimal `fetch` signature so the SDK works in Node 18+, Deno and browsers. */
@@ -23,8 +23,8 @@ export type FetchLike = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-/** Configuration for {@link FlowClient}. */
-export interface FlowClientConfig {
+/** Configuration for {@link RelwaveClient}. */
+export interface RelwaveClientConfig {
   /**
    * API key in `nl_xxxxx.secret` form. Keys prefixed with `nl_test_` are
    * sandbox keys — transactional sends are mocked, no real email is delivered.
@@ -32,7 +32,7 @@ export interface FlowClientConfig {
   apiKey: string;
   /**
    * Base URL of the API, without a trailing `/api/v1`. Defaults to
-   * `https://api.mgsoft.com.tr`. The `/api/v1` segment is appended automatically.
+   * `https://api.relwave.com`. The `/api/v1` segment is appended automatically.
    */
   baseUrl?: string;
   /** Send the key as `X-Api-Key` instead of `Authorization: Bearer`. Default: bearer. */
@@ -45,7 +45,7 @@ export interface FlowClientConfig {
   fetch?: FetchLike;
 }
 
-const DEFAULT_BASE_URL = 'https://api.mgsoft.com.tr';
+const DEFAULT_BASE_URL = 'https://api.relwave.com';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 interface RequestSpec {
@@ -58,13 +58,13 @@ interface RequestSpec {
 }
 
 /**
- * Typed client for the MGSoft Flow API.
+ * Typed client for the Relwave API.
  *
  * @example
  * ```ts
- * import { FlowClient } from '@mgsoft/flow';
+ * import { RelwaveClient } from '@relwave/sdk';
  *
- * const client = new FlowClient({ apiKey: process.env.NEWSLETTER_API_KEY! });
+ * const client = new RelwaveClient({ apiKey: process.env.NEWSLETTER_API_KEY! });
  *
  * const message = await client.messages.send({
  *   to: 'jane@example.com',
@@ -75,7 +75,7 @@ interface RequestSpec {
  * console.log(message.id, message.status);
  * ```
  */
-export class FlowClient {
+export class RelwaveClient {
   readonly subscribers: SubscribersResource;
   readonly lists: ListsResource;
   readonly campaigns: CampaignsResource;
@@ -88,16 +88,16 @@ export class FlowClient {
   private readonly timeoutMs: number;
   private readonly fetchImpl: FetchLike;
 
-  constructor(config: FlowClientConfig) {
+  constructor(config: RelwaveClientConfig) {
     if (!config.apiKey) {
-      throw new Error('FlowClient: `apiKey` is required.');
+      throw new Error('RelwaveClient: `apiKey` is required.');
     }
 
     const fetchImpl = config.fetch ?? globalThis.fetch;
 
     if (typeof fetchImpl !== 'function') {
       throw new Error(
-        'FlowClient: no global `fetch` available. Use Node 18+ or pass a `fetch` implementation.',
+        'RelwaveClient: no global `fetch` available. Use Node 18+ or pass a `fetch` implementation.',
       );
     }
 
@@ -120,7 +120,7 @@ export class FlowClient {
   }
 
   /**
-   * Issue a request and return the parsed envelope. Throws {@link FlowError}
+   * Issue a request and return the parsed envelope. Throws {@link RelwaveError}
    * on HTTP >= 400 or a populated `errors` map. Internal — resources call this.
    *
    * @internal
@@ -143,13 +143,13 @@ export class FlowClient {
       clear();
 
       if (cause instanceof Error && cause.name === 'AbortError') {
-        throw new FlowError('Request aborted or timed out.', {
+        throw new RelwaveError('Request aborted or timed out.', {
           status: 0,
           body: cause,
         });
       }
 
-      throw new FlowError(
+      throw new RelwaveError(
         `Network error: ${cause instanceof Error ? cause.message : String(cause)}`,
         { status: 0, body: cause },
       );
@@ -170,13 +170,13 @@ export class FlowClient {
       } catch {
         // Non-JSON body (e.g. a proxy error page) — surface it raw.
         if (!response.ok) {
-          throw new FlowError(
+          throw new RelwaveError(
             `Unexpected non-JSON response (HTTP ${response.status}).`,
             { status: response.status, body: text },
           );
         }
 
-        throw new FlowError('Failed to parse response body as JSON.', {
+        throw new RelwaveError('Failed to parse response body as JSON.', {
           status: response.status,
           body: text,
         });
@@ -188,7 +188,7 @@ export class FlowClient {
     const hasErrors = Object.keys(errors).length > 0;
 
     if (!response.ok || hasErrors) {
-      throw new FlowError(this.buildErrorMessage(response.status, errors), {
+      throw new RelwaveError(this.buildErrorMessage(response.status, errors), {
         status: response.status,
         errors,
         retryAfter: this.resolveRetryAfter(response, envelope.meta),
@@ -211,7 +211,7 @@ export class FlowClient {
       return first;
     }
 
-    return `MGSoft Flow API request failed with status ${status}.`;
+    return `Relwave API request failed with status ${status}.`;
   }
 
   private resolveRetryAfter(
@@ -337,7 +337,7 @@ function toPaginationMeta(meta: Record<string, unknown>): PaginationMeta {
 
 /** Subscriber operations: `client.subscribers.*`. */
 export class SubscribersResource {
-  constructor(private readonly client: FlowClient) {}
+  constructor(private readonly client: RelwaveClient) {}
 
   /** List subscribers (paginated). `GET /subscribers`. */
   async list(params: ListSubscribersParams = {}): Promise<Paginated<Subscriber>> {
@@ -392,7 +392,7 @@ export class SubscribersResource {
 
 /** Mailing list operations: `client.lists.*`. */
 export class ListsResource {
-  constructor(private readonly client: FlowClient) {}
+  constructor(private readonly client: RelwaveClient) {}
 
   /** List all mailing lists. `GET /lists`. */
   async list(options: RequestOptions = {}): Promise<MailingList[]> {
@@ -408,7 +408,7 @@ export class ListsResource {
 
 /** Campaign operations: `client.campaigns.*`. */
 export class CampaignsResource {
-  constructor(private readonly client: FlowClient) {}
+  constructor(private readonly client: RelwaveClient) {}
 
   /** List all campaigns. `GET /campaigns`. */
   async list(options: RequestOptions = {}): Promise<Campaign[]> {
@@ -424,12 +424,12 @@ export class CampaignsResource {
 
 /** Transactional message operations: `client.messages.*`. */
 export class MessagesResource {
-  constructor(private readonly client: FlowClient) {}
+  constructor(private readonly client: RelwaveClient) {}
 
   /** Send a transactional message. `POST /messages` (201). At least one of `html`/`text` required. */
   async send(body: SendMessageInput, options: RequestOptions = {}): Promise<Message> {
     if (!body.html && !body.text) {
-      throw new FlowError('messages.send requires at least one of `html` or `text`.', {
+      throw new RelwaveError('messages.send requires at least one of `html` or `text`.', {
         status: 422,
         errors: { html: ['html or text is required'] },
       });
