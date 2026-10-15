@@ -37,7 +37,7 @@
     "sdk",
     "typescript"
   ],
-  "author": "MGSoft",
+  "author": "mgsoft",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
