@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "tsc && node test/example.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

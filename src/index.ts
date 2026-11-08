@@ -3,6 +3,7 @@ import type {
   ApiEnvelope,
   Campaign,
   CreateSubscriberInput,
+  Me,
   ErrorMap,
   ListSubscribersParams,
   MailingList,
@@ -32,7 +33,7 @@ export interface RelwaveClientConfig {
   apiKey: string;
   /**
    * Base URL of the API, without a trailing `/api/v1`. Defaults to
-   * `https://api.relwave.com`. The `/api/v1` segment is appended automatically.
+   * `https://relwave.com`. The `/api/v1` segment is appended automatically.
    */
   baseUrl?: string;
   /** Send the key as `X-Api-Key` instead of `Authorization: Bearer`. Default: bearer. */
@@ -45,7 +46,7 @@ export interface RelwaveClientConfig {
   fetch?: FetchLike;
 }
 
-const DEFAULT_BASE_URL = 'https://api.relwave.com';
+const DEFAULT_BASE_URL = 'https://relwave.com';
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 interface RequestSpec {
@@ -125,6 +126,17 @@ export class RelwaveClient {
    *
    * @internal
    */
+  /** The account that owns this API key; handy as a connection test. `GET /me`. */
+  async me(options: RequestOptions = {}): Promise<Me> {
+    const envelope = await this.request<Me>({
+      method: 'GET',
+      path: '/me',
+      signal: options.signal,
+    });
+
+    return envelope.data;
+  }
+
   async request<T>(spec: RequestSpec): Promise<ApiEnvelope<T>> {
     const url = this.buildUrl(spec.path, spec.query);
     const headers = this.buildHeaders(spec);
@@ -319,7 +331,7 @@ function normalizeErrors(raw: unknown): ErrorMap {
     if (Array.isArray(value)) {
       out[key] = value.map((v) => String(v));
     } else if (value != null) {
-      out[key] = [String(value)];
+      out[key] = [typeof value === 'string' ? value : JSON.stringify(value)];
     }
   }
 

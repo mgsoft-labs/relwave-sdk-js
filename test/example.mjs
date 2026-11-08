@@ -18,6 +18,23 @@ function envelope(body, { status = 200, headers = {} } = {}) {
   });
 }
 
+// me() hits /me on the production API by default.
+{
+  let requested;
+  const client = new RelwaveClient({
+    apiKey: 'nl_abcde.secret',
+    fetch: async (url) => {
+      requested = String(url);
+
+      return envelope({ data: { account: { slug: 'acme', name: 'Acme' }, sandbox: false }, meta: {}, errors: {} });
+    },
+  });
+
+  const me = await client.me();
+  assert.equal(requested, 'https://relwave.com/api/v1/me');
+  assert.equal(me.account.slug, 'acme');
+}
+
 // 1. messages.send unwraps `data` and forwards the idempotency header.
 {
   const calls = [];

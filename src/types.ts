@@ -14,10 +14,10 @@
 export type SubscriberStatus = 'pending' | 'confirmed' | 'unsubscribed';
 
 /** Delivery status of a transactional message. */
-export type MessageStatus = 'sent' | 'failed' | 'delivered' | 'bounced' | 'complained' | string;
+export type MessageStatus = 'sent' | 'failed' | 'delivered' | 'bounced' | 'complained' | (string & {});
 
 /** Stream kind a message was sent through. */
-export type StreamType = 'transactional' | 'broadcast' | string;
+export type StreamType = 'transactional' | 'broadcast' | (string & {});
 
 /** Validation/runtime error map: field name -> list of human-readable messages. */
 export type ErrorMap = Record<string, string[]>;
@@ -66,6 +66,17 @@ export interface Subscriber {
   engagement_tier?: string | null;
   created_at?: string | null;
   unsubscribed_at?: string | null;
+  /** Present only when the request was made with a sandbox (`nl_test_`) key. */
+  sandbox?: boolean;
+}
+
+/** The account that owns the API key, returned by `client.me()`. */
+export interface Me {
+  account: {
+    slug: string;
+    name: string;
+  };
+  sandbox: boolean;
 }
 
 /** A mailing list. */

@@ -18,8 +18,8 @@ npm install @relwave/sdk
 import { RelwaveClient } from '@relwave/sdk';
 
 const client = new RelwaveClient({
-  apiKey: process.env.NEWSLETTER_API_KEY!, // "nl_xxxxx.secret"
-  baseUrl: 'https://app.relwave.com',     // optional — "/api/v1" is appended automatically
+  apiKey: process.env.RELWAVE_API_KEY!, // "nl_xxxxx.secret"
+  baseUrl: 'https://relwave.com',         // optional — "/api/v1" is appended automatically
 });
 
 // Send a transactional message
@@ -213,7 +213,7 @@ console.log(result.sandbox); // true
 | Option            | Type      | Default                     | Description                                          |
 | ----------------- | --------- | --------------------------- | ---------------------------------------------------- |
 | `apiKey`          | `string`  | — (required)                | API key, `nl_xxxxx.secret`.                          |
-| `baseUrl`         | `string`  | `https://api.relwave.com` | App origin; `/api/v1` is appended automatically.     |
+| `baseUrl`         | `string`  | `https://relwave.com` | App origin; `/api/v1` is appended automatically.     |
 | `useApiKeyHeader` | `boolean` | `false`                     | Send `X-Api-Key` instead of `Authorization: Bearer`. |
 | `headers`         | `object`  | `{}`                        | Extra headers merged into every request.             |
 | `timeoutMs`       | `number`  | `30000`                     | Per-request timeout (`0` disables).                  |
