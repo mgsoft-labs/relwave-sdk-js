@@ -6,8 +6,6 @@ Manage subscribers, mailing lists and campaigns, and send transactional email �
 
 ## Installation
 
-> **Yakında.** Paket henüz npm'e yayınlanmadı; aşağıdaki komut yayın sonrası geçerli olacak.
-
 ```bash
 npm install @relwave/sdk
 ```
